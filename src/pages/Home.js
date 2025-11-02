@@ -14,7 +14,8 @@ export default function Home() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/");
+        const res = await api.get("/api/reviews");
+
         setReviews(res.data || []);
       } catch (err) {
         console.error(err);
