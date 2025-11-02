@@ -24,18 +24,20 @@ export default function AddReview() {
   // --- Search Movies ---
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchTitle) return setToast({ message: "Enter a movie title to search", type: "error" });
+    if (!searchTitle.trim()) {
+      setToast({ message: "Enter a movie title to search", type: "error" });
+      return;
+    }
 
     try {
       setSearchLoading(true);
       setSearchResults([]);
-      // hitting backend route /api/movies?title=...
       const res = await axios.get(
         `https://test-uiyf.onrender.com/api/movies?title=${encodeURIComponent(searchTitle)}`
       );
 
-      if (res.data) {
-        setSearchResults([res.data]); // backend returns single movie object
+      if (res.data && res.data.Title) {
+        setSearchResults([res.data]); // ensure we have a movie object
       } else {
         setToast({ message: "Movie not found", type: "error" });
       }
@@ -48,7 +50,7 @@ export default function AddReview() {
   };
 
   const selectMovie = (movie) => {
-    setMovieTitle(movie.Title);
+    setMovieTitle(movie.Title || "");
     setMovieId(movie.imdbID || ""); // optional for backend
     setSearchResults([]);
     setSearchTitle("");
@@ -58,25 +60,31 @@ export default function AddReview() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user) return setToast({ message: "You must be logged in to add a review", type: "error" });
+    if (!user) {
+      setToast({ message: "You must be logged in to add a review", type: "error" });
+      return;
+    }
+
+    if (!movieTitle.trim() || !comment.trim()) {
+      setToast({ message: "Movie title and comment are required", type: "error" });
+      return;
+    }
 
     try {
       setLoading(true);
       const headers = await getAuthHeader();
       const payload = { movieTitle, movieId, rating: Number(rating), comment };
 
-      // POST to /api/reviews
       await api.post("/reviews", payload, { headers });
 
       setToast({ message: "Review added successfully" });
 
-      // reset form
-      setMovieTitle(""); 
-      setMovieId(""); 
-      setComment(""); 
+      // Reset form
+      setMovieTitle("");
+      setMovieId("");
+      setComment("");
       setRating(5);
 
-      // navigate to My Reviews
       navigate("/my-reviews");
     } catch (err) {
       console.error(err);
@@ -111,7 +119,7 @@ export default function AddReview() {
         <div className="mb-3">
           {searchResults.map((movie) => (
             <div
-              key={movie.imdbID}
+              key={movie.imdbID || movie.Title}
               className="card p-2 mb-2 d-flex flex-row align-items-center"
             >
               {movie.Poster && (
@@ -122,7 +130,7 @@ export default function AddReview() {
                 />
               )}
               <div className="flex-grow-1">
-                <strong>{movie.Title} ({movie.Year})</strong>
+                <strong>{movie.Title} ({movie.Year || "N/A"})</strong>
               </div>
               <button
                 className="btn btn-sm btn-primary"
