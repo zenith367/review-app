@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import api from "../api"; // Axios instance pointing to your Render backend
+import api from "../api"; // Axios instance with API_BASE
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import bannerImg from "../pages/moviebanner.jpg"; // make sure this file exists
+import bannerImg from "../pages/moviebanner.jpg"; // ensure this file exists
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
@@ -13,7 +13,7 @@ export default function Home() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/reviews"); // <-- use the correct endpoint
+        const res = await api.get("/reviews"); // fixed endpoint
         setReviews(res.data || []);
       } catch (err) {
         console.error(err);
@@ -22,12 +22,13 @@ export default function Home() {
         setLoading(false);
       }
     };
+
     fetchReviews();
   }, []);
 
   return (
     <div className="home-page">
-      {/* 🎬 Hero Section */}
+      {/* Hero Section */}
       <div className="hero-section">
         <img src={bannerImg} alt="Movie Banner" className="hero-image" />
         <div className="hero-overlay">
@@ -36,7 +37,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 📝 Reviews Section */}
+      {/* Reviews Section */}
       <div className="container mt-5">
         <h2 className="text-center mb-4 text-warning">All Reviews</h2>
 
