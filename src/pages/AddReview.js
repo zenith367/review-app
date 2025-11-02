@@ -28,7 +28,7 @@ export default function AddReview() {
     try {
       setSearchLoading(true);
       setSearchResults([]);
-      const res = await axios.get(`http://localhost:5000/api/movies?title=${encodeURIComponent(searchTitle)}`);
+      const res = await axios.get(`https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`);
       setSearchResults([res.data]); // OMDb returns a single movie with `t=` search
     } catch (err) {
       console.error(err);
@@ -55,7 +55,8 @@ export default function AddReview() {
       setLoading(true);
       const headers = await getAuthHeader();
       const payload = { movieTitle, movieId, rating: Number(rating), comment };
-      const res = await api.post("/", payload, { headers });
+      const res = await api.post("/api/reviews", payload, { headers });
+
       setToast({ message: "Review added successfully" });
 
       // reset form
