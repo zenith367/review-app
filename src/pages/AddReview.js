@@ -33,7 +33,7 @@ export default function AddReview() {
       setSearchLoading(true);
       setSearchResults([]);
       const res = await axios.get(
-        `https://test-uiyf.onrender.com/api/movies?title=${encodeURIComponent(searchTitle)}`
+        `https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`
       );
 
       if (res.data && res.data.Title) {
