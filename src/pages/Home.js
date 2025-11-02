@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import api from "../api"; // Axios instance with API_BASE
+import api from "../api";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import bannerImg from "../pages/moviebanner.jpg"; // ensure this file exists
+import bannerImg from "../pages/moviebanner.jpg";
+// you can change the name/path
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
@@ -13,7 +14,7 @@ export default function Home() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/reviews"); // fixed endpoint
+        const res = await api.get("/");
         setReviews(res.data || []);
       } catch (err) {
         console.error(err);
@@ -22,13 +23,12 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     fetchReviews();
   }, []);
 
   return (
     <div className="home-page">
-      {/* Hero Section */}
+      {/* 🎬 Hero Section */}
       <div className="hero-section">
         <img src={bannerImg} alt="Movie Banner" className="hero-image" />
         <div className="hero-overlay">
@@ -37,7 +37,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Reviews Section */}
+      {/* 📝 Reviews Section */}
       <div className="container mt-5">
         <h2 className="text-center mb-4 text-warning">All Reviews</h2>
 
@@ -49,7 +49,7 @@ export default function Home() {
 
         <div className="mt-3">
           {reviews.map((r) => (
-            <div key={r.id || r._id} className="card mb-3 p-3 shadow-sm">
+            <div key={r.id} className="card mb-3 p-3 shadow-sm">
               <div className="d-flex justify-content-between">
                 <h5 className="mb-1">{r.movieTitle || `Movie ${r.movieId || ""}`}</h5>
                 <small className="text-muted">
