@@ -1,0 +1,25 @@
+.navbar {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+  
+  .nav-link {
+    color: #ddd !important;
+    transition: color 0.3s ease-in-out;
+    margin-right: 10px;
+  }
+  
+  .nav-link:hover {
+    color: #ffc107 !important;
+    text-decoration: underline;
+  }
+  
+  .nav-link.active {
+    color: #ffc107 !important;
+    font-weight: bold;
+  }
+  
