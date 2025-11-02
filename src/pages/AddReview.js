@@ -4,7 +4,6 @@ import api, { getAuthHeader } from "../api";
 import { auth } from "../firebase";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export default function AddReview() {
@@ -15,79 +14,50 @@ export default function AddReview() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const [searchTitle, setSearchTitle] = useState(""); // For movie search
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-
   const navigate = useNavigate();
-
-  // --- Search Movies ---
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchTitle.trim()) {
-      setToast({ message: "Enter a movie title to search", type: "error" });
-      return;
-    }
-
-    try {
-      setSearchLoading(true);
-      setSearchResults([]);
-      const res = await axios.get(
-        `https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`
-      );
-
-      if (res.data && res.data.Title) {
-        setSearchResults([res.data]); // ensure we have a movie object
-      } else {
-        setToast({ message: "Movie not found", type: "error" });
-      }
-    } catch (err) {
-      console.error(err);
-      setToast({ message: "Movie not found or API error", type: "error" });
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const selectMovie = (movie) => {
-    setMovieTitle(movie.Title || "");
-    setMovieId(movie.imdbID || ""); // optional for backend
-    setSearchResults([]);
-    setSearchTitle("");
-  };
 
   // --- Submit Review ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
     if (!user) {
-      setToast({ message: "You must be logged in to add a review", type: "error" });
-      return;
+      return setToast({ message: "You must be logged in to add a review", type: "error" });
     }
 
-    if (!movieTitle.trim() || !comment.trim()) {
-      setToast({ message: "Movie title and comment are required", type: "error" });
-      return;
+    if (!movieTitle || !comment) {
+      return setToast({ message: "Movie title and review are required", type: "error" });
     }
 
     try {
       setLoading(true);
-      const headers = await getAuthHeader();
-      const payload = { movieTitle, movieId, rating: Number(rating), comment };
 
+      const headers = await getAuthHeader();
+
+      // payload ensures all Home.jsx fields exist
+      const payload = {
+        movieTitle,
+        movieId: movieId || null,
+        comment,
+        rating: Number(rating) || 0,
+        userId: user.uid, // needed by Home.jsx
+        createdAt: new Date().toISOString() // ensures Home can format it
+      };
+
+      // POST to backend
       await api.post("/reviews", payload, { headers });
 
       setToast({ message: "Review added successfully" });
 
-      // Reset form
+      // reset form
       setMovieTitle("");
       setMovieId("");
       setComment("");
       setRating(5);
 
+      // navigate to My Reviews
       navigate("/my-reviews");
     } catch (err) {
-      console.error(err);
+      console.error("Add review error:", err);
       const msg = err.response?.data?.error || "Failed to add review";
       setToast({ message: msg, type: "error" });
     } finally {
@@ -99,49 +69,6 @@ export default function AddReview() {
     <div className="container mt-4">
       <h2>Add a Review</h2>
       {toast && <ToastMessage {...toast} onClose={() => setToast(null)} />}
-
-      {/* Movie Search */}
-      <form onSubmit={handleSearch} className="d-flex mb-3">
-        <input
-          type="text"
-          className="form-control me-2"
-          placeholder="Search movie..."
-          value={searchTitle}
-          onChange={(e) => setSearchTitle(e.target.value)}
-        />
-        <button className="btn btn-dark" type="submit" disabled={searchLoading}>
-          {searchLoading ? "Searching..." : "Search"}
-        </button>
-      </form>
-
-      {/* Search Results */}
-      {searchResults.length > 0 && (
-        <div className="mb-3">
-          {searchResults.map((movie) => (
-            <div
-              key={movie.imdbID || movie.Title}
-              className="card p-2 mb-2 d-flex flex-row align-items-center"
-            >
-              {movie.Poster && (
-                <img
-                  src={movie.Poster}
-                  alt={movie.Title}
-                  style={{ width: "80px", marginRight: "10px" }}
-                />
-              )}
-              <div className="flex-grow-1">
-                <strong>{movie.Title} ({movie.Year || "N/A"})</strong>
-              </div>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={() => selectMovie(movie)}
-              >
-                Select
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Review Form */}
       <form onSubmit={handleSubmit}>
