@@ -2,7 +2,7 @@
 import axios from "axios";
 import { auth } from "./firebase";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api/reviews";
+const API_BASE = process.env.REACT_APP_API_BASE || "https://test-uiyf.onrender.com";
 
 async function getAuthHeader() {
   const user = auth.currentUser;
