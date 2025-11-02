@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import api from "../api";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import bannerImg from "../pages/moviebanner.jpg"; // you can change the path
+import bannerImg from "../pages/moviebanner.jpg";
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
@@ -15,22 +15,22 @@ export default function Home() {
       try {
         setLoading(true);
         const res = await api.get("/api/reviews");
-        setReviews(res.data || []);
+        setReviews(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching reviews:", err);
         setToast({ message: "Failed to load reviews", type: "error" });
       } finally {
         setLoading(false);
       }
     };
-
     fetchReviews();
   }, []);
 
-  // helper to safely format date
+  // Safe date formatting
   const formatDate = (date) => {
     if (!date) return "N/A";
     try {
+      // handles Firestore Timestamp or normal Date string
       const d = date?.toDate ? date.toDate() : new Date(date);
       return d.toLocaleString();
     } catch {
@@ -40,7 +40,7 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      {/* 🎬 Hero Section */}
+      {/* Hero Section */}
       <div className="hero-section">
         <img src={bannerImg} alt="Movie Banner" className="hero-image" />
         <div className="hero-overlay">
@@ -49,7 +49,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 📝 Reviews Section */}
+      {/* Reviews Section */}
       <div className="container mt-5">
         <h2 className="text-center mb-4 text-warning">All Reviews</h2>
 
@@ -60,19 +60,28 @@ export default function Home() {
         )}
 
         <div className="mt-3">
-          {reviews.map((r) => (
-            <div key={r.id || r._id || r.movieId} className="card mb-3 p-3 shadow-sm">
-              <div className="d-flex justify-content-between">
-                <h5 className="mb-1">{r.movieTitle || `Movie ${r.movieId || ""}`}</h5>
-                <small className="text-muted">{formatDate(r.createdAt)}</small>
+          {reviews.map((r, idx) => {
+            // fallback values
+            const movieTitle = r.movieTitle || `Movie ${r.movieId || idx + 1}`;
+            const comment = r.comment || r.reviewText || "No comment";
+            const rating = r.rating ?? "N/A";
+            const userId = r.userId || "Anonymous";
+            const createdAt = formatDate(r.createdAt);
+
+            return (
+              <div key={r.id || r._id || idx} className="card mb-3 p-3 shadow-sm">
+                <div className="d-flex justify-content-between">
+                  <h5 className="mb-1">{movieTitle}</h5>
+                  <small className="text-muted">{createdAt}</small>
+                </div>
+                <p className="mb-1">{comment}</p>
+                <small>Rating: ⭐ {rating}</small>
+                <div className="mt-2">
+                  <small className="text-muted">By: {userId}</small>
+                </div>
               </div>
-              <p className="mb-1">{r.comment || r.reviewText || "No comment"}</p>
-              <small>Rating: ⭐ {r.rating || "N/A"}</small>
-              <div className="mt-2">
-                <small className="text-muted">By: {r.userId || "Anonymous"}</small>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
