@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import api from "../api";
+import api from "../api"; // Axios instance pointing to your Render backend
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import bannerImg from "../pages/moviebanner.jpg";
-// you can change the name/path
+import bannerImg from "../pages/moviebanner.jpg"; // make sure this file exists
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
@@ -14,7 +13,7 @@ export default function Home() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/");
+        const res = await api.get("/reviews"); // <-- use the correct endpoint
         setReviews(res.data || []);
       } catch (err) {
         console.error(err);
@@ -49,7 +48,7 @@ export default function Home() {
 
         <div className="mt-3">
           {reviews.map((r) => (
-            <div key={r.id} className="card mb-3 p-3 shadow-sm">
+            <div key={r.id || r._id} className="card mb-3 p-3 shadow-sm">
               <div className="d-flex justify-content-between">
                 <h5 className="mb-1">{r.movieTitle || `Movie ${r.movieId || ""}`}</h5>
                 <small className="text-muted">
