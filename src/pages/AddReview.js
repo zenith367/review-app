@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import api, { getAuthHeader } from "../api";
+import api, { getAuthHeader } from "../api"; // make sure api.js is in src/api.js
 import { auth } from "../firebase";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export default function AddReview() {
   const [movieTitle, setMovieTitle] = useState("");
-  const [movieId, setMovieId] = useState(""); // optional
+  const [movieId, setMovieId] = useState("");
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const [searchTitle, setSearchTitle] = useState(""); // For OMDb search
+  const [searchTitle, setSearchTitle] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
@@ -28,8 +27,9 @@ export default function AddReview() {
     try {
       setSearchLoading(true);
       setSearchResults([]);
-      const res = await axios.get(`https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`);
-      setSearchResults([res.data]); // OMDb returns a single movie with `t=` search
+      // Use api instance; hits your hosted backend
+      const res = await api.get(`/movies?title=${encodeURIComponent(searchTitle)}`);
+      setSearchResults([res.data]);
     } catch (err) {
       console.error(err);
       setToast({ message: "Movie not found or API error", type: "error" });
@@ -40,7 +40,7 @@ export default function AddReview() {
 
   const selectMovie = (movie) => {
     setMovieTitle(movie.Title);
-    setMovieId(movie.imdbID); // optional for backend
+    setMovieId(movie.imdbID);
     setSearchResults([]);
     setSearchTitle("");
   };
@@ -55,16 +55,14 @@ export default function AddReview() {
       setLoading(true);
       const headers = await getAuthHeader();
       const payload = { movieTitle, movieId, rating: Number(rating), comment };
-      const res = await api.post("/", payload, { headers });
-      setToast({ message: "Review added successfully" });
+      await api.post("/reviews", payload, { headers }); // POST to /reviews
+      setToast({ message: "Review added successfully", type: "success" });
 
-      // reset form
-      setMovieTitle(""); 
-      setMovieId(""); 
-      setComment(""); 
+      setMovieTitle("");
+      setMovieId("");
+      setComment("");
       setRating(5);
 
-      // optional: navigate to my reviews
       navigate("/my-reviews");
     } catch (err) {
       console.error(err);
