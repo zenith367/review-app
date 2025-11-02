@@ -1,9 +1,9 @@
+// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import bannerImg from "../pages/moviebanner.jpg";
-// you can change the name/path
+import bannerImg from "../pages/moviebanner.jpg"; // you can change the path
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
@@ -15,7 +15,6 @@ export default function Home() {
       try {
         setLoading(true);
         const res = await api.get("/api/reviews");
-
         setReviews(res.data || []);
       } catch (err) {
         console.error(err);
@@ -24,8 +23,20 @@ export default function Home() {
         setLoading(false);
       }
     };
+
     fetchReviews();
   }, []);
+
+  // helper to safely format date
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    try {
+      const d = date?.toDate ? date.toDate() : new Date(date);
+      return d.toLocaleString();
+    } catch {
+      return "Invalid date";
+    }
+  };
 
   return (
     <div className="home-page">
@@ -50,19 +61,15 @@ export default function Home() {
 
         <div className="mt-3">
           {reviews.map((r) => (
-            <div key={r.id} className="card mb-3 p-3 shadow-sm">
+            <div key={r.id || r._id || r.movieId} className="card mb-3 p-3 shadow-sm">
               <div className="d-flex justify-content-between">
                 <h5 className="mb-1">{r.movieTitle || `Movie ${r.movieId || ""}`}</h5>
-                <small className="text-muted">
-                  {new Date(
-                    r.createdAt?.toDate ? r.createdAt.toDate() : r.createdAt
-                  ).toLocaleString()}
-                </small>
+                <small className="text-muted">{formatDate(r.createdAt)}</small>
               </div>
-              <p className="mb-1">{r.comment || r.reviewText}</p>
-              <small>Rating: ⭐ {r.rating}</small>
+              <p className="mb-1">{r.comment || r.reviewText || "No comment"}</p>
+              <small>Rating: ⭐ {r.rating || "N/A"}</small>
               <div className="mt-2">
-                <small className="text-muted">By: {r.userId}</small>
+                <small className="text-muted">By: {r.userId || "Anonymous"}</small>
               </div>
             </div>
           ))}
