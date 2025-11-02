@@ -1,3 +1,4 @@
+// src/pages/AddReview.jsx
 import React, { useState } from "react";
 import api, { getAuthHeader } from "../api";
 import { auth } from "../firebase";
@@ -14,13 +15,13 @@ export default function AddReview() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const [searchTitle, setSearchTitle] = useState(""); // For OMDb search
+  const [searchTitle, setSearchTitle] = useState(""); // For movie search
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // --- Search OMDb ---
+  // --- Search Movies ---
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTitle) return setToast({ message: "Enter a movie title to search", type: "error" });
@@ -28,9 +29,16 @@ export default function AddReview() {
     try {
       setSearchLoading(true);
       setSearchResults([]);
-      const res = await axios.get(`https://test-uiyf.onrender.com/api/movies?title=${encodeURIComponent(searchTitle)}`);
+      // hitting backend route /api/movies?title=...
+      const res = await axios.get(
+        `https://test-uiyf.onrender.com/api/movies?title=${encodeURIComponent(searchTitle)}`
+      );
 
-      setSearchResults([res.data]); // OMDb returns a single movie with `t=` search
+      if (res.data) {
+        setSearchResults([res.data]); // backend returns single movie object
+      } else {
+        setToast({ message: "Movie not found", type: "error" });
+      }
     } catch (err) {
       console.error(err);
       setToast({ message: "Movie not found or API error", type: "error" });
@@ -41,7 +49,7 @@ export default function AddReview() {
 
   const selectMovie = (movie) => {
     setMovieTitle(movie.Title);
-    setMovieId(movie.imdbID); // optional for backend
+    setMovieId(movie.imdbID || ""); // optional for backend
     setSearchResults([]);
     setSearchTitle("");
   };
@@ -56,7 +64,9 @@ export default function AddReview() {
       setLoading(true);
       const headers = await getAuthHeader();
       const payload = { movieTitle, movieId, rating: Number(rating), comment };
-      const res = await api.post("/reviews", payload, { headers });
+
+      // POST to /api/reviews
+      await api.post("/reviews", payload, { headers });
 
       setToast({ message: "Review added successfully" });
 
@@ -66,7 +76,7 @@ export default function AddReview() {
       setComment(""); 
       setRating(5);
 
-      // optional: navigate to my reviews
+      // navigate to My Reviews
       navigate("/my-reviews");
     } catch (err) {
       console.error(err);
@@ -82,7 +92,7 @@ export default function AddReview() {
       <h2>Add a Review</h2>
       {toast && <ToastMessage {...toast} onClose={() => setToast(null)} />}
 
-      {/* OMDb Search */}
+      {/* Movie Search */}
       <form onSubmit={handleSearch} className="d-flex mb-3">
         <input
           type="text"
@@ -96,16 +106,30 @@ export default function AddReview() {
         </button>
       </form>
 
-      {/* Search results */}
+      {/* Search Results */}
       {searchResults.length > 0 && (
         <div className="mb-3">
           {searchResults.map((movie) => (
-            <div key={movie.imdbID} className="card p-2 mb-2 d-flex flex-row align-items-center">
-              <img src={movie.Poster} alt={movie.Title} style={{ width: "80px", marginRight: "10px" }} />
+            <div
+              key={movie.imdbID}
+              className="card p-2 mb-2 d-flex flex-row align-items-center"
+            >
+              {movie.Poster && (
+                <img
+                  src={movie.Poster}
+                  alt={movie.Title}
+                  style={{ width: "80px", marginRight: "10px" }}
+                />
+              )}
               <div className="flex-grow-1">
                 <strong>{movie.Title} ({movie.Year})</strong>
               </div>
-              <button className="btn btn-sm btn-primary" onClick={() => selectMovie(movie)}>Select</button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => selectMovie(movie)}
+              >
+                Select
+              </button>
             </div>
           ))}
         </div>
