@@ -1,35 +1,30 @@
 import React, { useState } from "react";
-import api, { getAuthHeader } from "../api";
+import api, { getAuthHeader } from "../api/api";
 import { auth } from "../firebase";
 import Spinner from "../components/Spinner";
 import ToastMessage from "../components/ToastMessage";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export default function AddReview() {
   const [movieTitle, setMovieTitle] = useState("");
-  const [movieId, setMovieId] = useState(""); // optional
+  const [movieId, setMovieId] = useState("");
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-
-  const [searchTitle, setSearchTitle] = useState(""); // For OMDb search
+  const [searchTitle, setSearchTitle] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // --- Search OMDb ---
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchTitle) return setToast({ message: "Enter a movie title to search", type: "error" });
-
+    if (!searchTitle) return setToast({ message: "Enter a movie title", type: "error" });
     try {
       setSearchLoading(true);
-      setSearchResults([]);
-      const res = await axios.get(`https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`);
-      setSearchResults([res.data]); // OMDb returns a single movie with `t=` search
+      const res = await api.get(`https://test-uiyf.onrender.com?title=${encodeURIComponent(searchTitle)}`);
+      setSearchResults([res.data]);
     } catch (err) {
       console.error(err);
       setToast({ message: "Movie not found or API error", type: "error" });
@@ -40,31 +35,25 @@ export default function AddReview() {
 
   const selectMovie = (movie) => {
     setMovieTitle(movie.Title);
-    setMovieId(movie.imdbID); // optional for backend
+    setMovieId(movie.imdbID);
     setSearchResults([]);
     setSearchTitle("");
   };
 
-  // --- Submit Review ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user) return setToast({ message: "You must be logged in to add a review", type: "error" });
-
+    if (!user) return setToast({ message: "Login required", type: "error" });
     try {
       setLoading(true);
       const headers = await getAuthHeader();
       const payload = { movieTitle, movieId, rating: Number(rating), comment };
-      const res = await api.post("/", payload, { headers });
-      setToast({ message: "Review added successfully" });
-
-      // reset form
-      setMovieTitle(""); 
-      setMovieId(""); 
-      setComment(""); 
+      await api.post("/reviews", payload, { headers });
+      setToast({ message: "Review added successfully", type: "success" });
+      setMovieTitle("");
+      setMovieId("");
+      setComment("");
       setRating(5);
-
-      // optional: navigate to my reviews
       navigate("/my-reviews");
     } catch (err) {
       console.error(err);
@@ -79,8 +68,6 @@ export default function AddReview() {
     <div className="container mt-4">
       <h2>Add a Review</h2>
       {toast && <ToastMessage {...toast} onClose={() => setToast(null)} />}
-
-      {/* OMDb Search */}
       <form onSubmit={handleSearch} className="d-flex mb-3">
         <input
           type="text"
@@ -94,7 +81,6 @@ export default function AddReview() {
         </button>
       </form>
 
-      {/* Search results */}
       {searchResults.length > 0 && (
         <div className="mb-3">
           {searchResults.map((movie) => (
@@ -109,7 +95,6 @@ export default function AddReview() {
         </div>
       )}
 
-      {/* Review Form */}
       <form onSubmit={handleSubmit}>
         <input
           className="form-control mb-3"
